@@ -1,8 +1,42 @@
+// =========================
+// EmailJS OTP Helper Functions
+// =========================
+emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your EmailJS public key
+
+function sendOtp(email) {
+  email = email || document.getElementById('loginEmail')?.value || 'your-email@example.com';
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  localStorage.setItem('otpCode', otp); // store OTP temporarily
+
+  const templateParams = {
+    to_email: email,
+    otp: otp
+  };
+
+  return emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+    .then(response => {
+      console.log('OTP sent:', otp);
+      return { ok: true };
+    })
+    .catch(err => {
+      console.error('Failed to send OTP:', err);
+      return { ok: false };
+    });
+}
+
+function verifyOtp(email, code) {
+  const stored = localStorage.getItem('otpCode');
+  return Promise.resolve(code === stored);
+}
+
+// =========================
+// Existing Code
+// =========================
 const ADMIN_USERNAME='admin';
 const ADMIN_PASSWORD='Admin@123';
-const API_BASE='https://ponnadasridhar.github.io/school/api';
 const BYPASS_EMAIL='ponnadasridhar05@gmail.com';
 const OTP_EXP_MS=5*60*1000;
+
 function genOtp(){return String(Math.floor(100000+Math.random()*900000))}
 function read(key,def){try{const v=localStorage.getItem(key);return v?JSON.parse(v):def}catch{return def}}
 function write(key,val){localStorage.setItem(key,JSON.stringify(val))}
@@ -17,6 +51,10 @@ function setSports(arr){write('gallerySports',arr)}
 function getPapers(){return read('questionPapers',{})}
 function setPapers(obj){write('questionPapers',obj)}
 function show(el,flag){el.style.display=flag?'':'none'}
+
+// =========================
+// Login and OTP Setup
+// =========================
 function loginInit(){
   const form=document.getElementById('loginForm');
   const status=document.getElementById('loginStatus');
@@ -39,18 +77,7 @@ function loginInit(){
     }).catch(()=>{otpStatus.textContent='Failed to send OTP'});
   });
 }
-async function sendOtp(email){
-  const body=email?{email}:{ };
-  const r=await fetch(API_BASE+'/send-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const j=await r.json();
-  return j;
-}
-async function verifyOtp(email,code){
-  const body=email?{email,code}:{code};
-  const r=await fetch(API_BASE+'/verify-otp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const j=await r.json();
-  return j&&j.ok===true;
-}
+
 function setupOtp(){
   const sendBtn=document.getElementById('sendOtp');
   const verifyBtn=document.getElementById('verifyOtp');
@@ -75,6 +102,10 @@ function setupOtp(){
     }).catch(()=>{status.textContent='Verification failed'});
   });
 }
+
+// =========================
+// Admin Panel Setup
+// =========================
 function initAdmin(){
   const s=getSchool();
   document.getElementById('schoolNameInput').value=s.schoolName||'';
@@ -83,6 +114,7 @@ function initAdmin(){
   document.getElementById('emailInput').value=s.contactEmail||'';
   document.getElementById('staffCountInput').value=s.staffCount||0;
   document.getElementById('studentCountInput').value=s.studentCount||0;
+
   document.getElementById('schoolForm').addEventListener('submit',e=>{
     e.preventDefault();
     const d={
@@ -96,9 +128,11 @@ function initAdmin(){
     setSchool(d);
     document.getElementById('schoolStatus').textContent='Saved';
   });
+
   renderGalleryAdmin();
   renderPapersAdmin();
   setupPasswordChange();
+
   document.getElementById('addAch').addEventListener('click',()=>{
     const url=document.getElementById('achUrl').value.trim();
     if(!url)return;
@@ -108,6 +142,7 @@ function initAdmin(){
     document.getElementById('achUrl').value='';
     renderGalleryAdmin();
   });
+
   document.getElementById('addSport').addEventListener('click',()=>{
     const url=document.getElementById('sportUrl').value.trim();
     if(!url)return;
@@ -117,6 +152,7 @@ function initAdmin(){
     document.getElementById('sportUrl').value='';
     renderGalleryAdmin();
   });
+
   document.getElementById('paperForm').addEventListener('submit',e=>{
     e.preventDefault();
     const grade=String(document.getElementById('gradeInput').value);
@@ -131,6 +167,7 @@ function initAdmin(){
     document.getElementById('paperStatus').textContent='Added';
     renderPapersAdmin();
   });
+
   document.getElementById('logout').addEventListener('click',()=>{
     show(document.getElementById('adminPanel'),false);
     show(document.getElementById('loginSection'),true);
@@ -139,10 +176,15 @@ function initAdmin(){
     document.getElementById('otpInput').value='';
   });
 }
+
+// =========================
+// Password Change Setup
+// =========================
 function setupPasswordChange(){
   const sendBtn=document.getElementById('sendOtpPwd');
   const applyBtn=document.getElementById('applyPassword');
   const status=document.getElementById('passwordStatus');
+
   if(sendBtn){
     sendBtn.addEventListener('click',()=>{
       const email=document.getElementById('adminEmailChange').value.trim()||document.getElementById('loginEmail').value.trim()||getSchool().contactEmail||'school@example.com';
@@ -154,6 +196,7 @@ function setupPasswordChange(){
       }).catch(()=>{status.textContent='Failed to send OTP'});
     });
   }
+
   if(applyBtn){
     applyBtn.addEventListener('click',()=>{
       const input=document.getElementById('otpInputPwd').value.trim();
@@ -175,6 +218,10 @@ function setupPasswordChange(){
     });
   }
 }
+
+// =========================
+// Gallery and Papers Rendering
+// =========================
 function renderGalleryAdmin(){
   const ach=getAchievements();
   const sport=getSports();
@@ -182,76 +229,49 @@ function renderGalleryAdmin(){
   const sportList=document.getElementById('sportList');
   achList.innerHTML='';
   sportList.innerHTML='';
+
   ach.forEach((u,i)=>{
-    const row=document.createElement('div');
-    row.className='list';
-    const item=document.createElement('div');
-    item.className='list';
+    const ul=document.createElement('ul'); ul.className='list';
     const li=document.createElement('li');
-    li.textContent=u;
-    const btn=document.createElement('button');
-    btn.className='btn';
-    btn.textContent='Remove';
+    li.appendChild(document.createElement('span')).textContent=u;
+    const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Remove';
     btn.addEventListener('click',()=>{
-      const arr=getAchievements();
-      arr.splice(i,1);
-      setAchievements(arr);
-      renderGalleryAdmin();
+      const arr=getAchievements(); arr.splice(i,1); setAchievements(arr); renderGalleryAdmin();
     });
-    const wrapper=document.createElement('div');
-    wrapper.className='list';
-    const ul=document.createElement('ul');
-    ul.className='list';
-    const liWrap=document.createElement('li');
-    liWrap.appendChild(document.createElement('span')).textContent=u;
-    liWrap.appendChild(btn);
-    ul.appendChild(liWrap);
-    achList.appendChild(ul);
+    li.appendChild(btn); ul.appendChild(li); achList.appendChild(ul);
   });
+
   sport.forEach((u,i)=>{
-    const ul=document.createElement('ul');
-    ul.className='list';
-    const liWrap=document.createElement('li');
-    liWrap.appendChild(document.createElement('span')).textContent=u;
-    const btn=document.createElement('button');
-    btn.className='btn';
-    btn.textContent='Remove';
+    const ul=document.createElement('ul'); ul.className='list';
+    const li=document.createElement('li');
+    li.appendChild(document.createElement('span')).textContent=u;
+    const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Remove';
     btn.addEventListener('click',()=>{
-      const arr=getSports();
-      arr.splice(i,1);
-      setSports(arr);
-      renderGalleryAdmin();
+      const arr=getSports(); arr.splice(i,1); setSports(arr); renderGalleryAdmin();
     });
-    liWrap.appendChild(btn);
-    ul.appendChild(liWrap);
-    sportList.appendChild(ul);
+    li.appendChild(btn); ul.appendChild(li); sportList.appendChild(ul);
   });
 }
+
 function renderPapersAdmin(){
-  const cont=document.getElementById('papersAdmin');
-  cont.innerHTML='';
+  const cont=document.getElementById('papersAdmin'); cont.innerHTML='';
   const papers=getPapers();
   Object.keys(papers).sort((a,b)=>Number(a)-Number(b)).forEach(g=>{
     papers[g].forEach((p,i)=>{
-      const ul=document.createElement('ul');
-      ul.className='list';
+      const ul=document.createElement('ul'); ul.className='list';
       const li=document.createElement('li');
-      const s=document.createElement('span');
-      s.textContent='Grade '+g+': '+p.title;
-      const a=document.createElement('a');
-      a.href=p.url;a.target='_blank';a.textContent='Open';
-      const btn=document.createElement('button');
-      btn.className='btn';btn.textContent='Remove';
+      const s=document.createElement('span'); s.textContent='Grade '+g+': '+p.title;
+      const a=document.createElement('a'); a.href=p.url; a.target='_blank'; a.textContent='Open';
+      const btn=document.createElement('button'); btn.className='btn'; btn.textContent='Remove';
       btn.addEventListener('click',()=>{
-        const pp=getPapers();
-        pp[g].splice(i,1);
-        setPapers(pp);
-        renderPapersAdmin();
+        const pp=getPapers(); pp[g].splice(i,1); setPapers(pp); renderPapersAdmin();
       });
-      li.appendChild(s);li.appendChild(a);li.appendChild(btn);
-      ul.appendChild(li);
-      cont.appendChild(ul);
+      li.appendChild(s); li.appendChild(a); li.appendChild(btn); ul.appendChild(li); cont.appendChild(ul);
     });
   });
 }
-document.addEventListener('DOMContentLoaded',loginInit);
+
+// =========================
+// Initialize
+// =========================
+document.addEventListener('DOMContentLoaded', loginInit);
