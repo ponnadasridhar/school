@@ -1,6 +1,6 @@
 const ADMIN_USERNAME='admin';
 const ADMIN_PASSWORD='Admin@123';
-const API_BASE='http://localhost:3000/api';
+const API_BASE='https://ponnadasridhar.github.io/school/api';
 const BYPASS_EMAIL='ponnadasridhar05@gmail.com';
 const OTP_EXP_MS=5*60*1000;
 function genOtp(){return String(Math.floor(100000+Math.random()*900000))}
