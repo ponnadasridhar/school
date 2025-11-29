@@ -1,6 +1,6 @@
 const ADMIN_USERNAME='admin';
 const ADMIN_PASSWORD='Admin@123';
-const API_BASE='https://school-backend-l651.onrender.com/api';
+const API_BASE='https://school-backend-1-4dlb.onrender.com/api';
 const BYPASS_EMAIL='ponnadasridhar05@gmail.com';
 const OTP_EXP_MS=5*60*1000;
 function genOtp(){return String(Math.floor(100000+Math.random()*900000))}
