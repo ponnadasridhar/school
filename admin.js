@@ -1,33 +1,42 @@
 // =========================
 // EmailJS OTP Helper Functions
 // =========================
-emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your EmailJS public key
+emailjs.init("O4nd0NmBxC_hi-r2T); // Replace with your EmailJS public key
 
-function sendOtp(email) {
-  email = email || document.getElementById('loginEmail')?.value || 'your-email@example.com';
-  const otp = String(Math.floor(100000 + Math.random() * 900000));
-  localStorage.setItem('otpCode', otp); // store OTP temporarily
+async function sendOtp(email) {
+  // Use default email if none provided
+  email = email || 'ponnadasridhar05@gmail.com';
 
+  // Generate OTP and store it temporarily
+  currentOtp = genOtp();
+
+  // Prepare EmailJS parameters
   const templateParams = {
     to_email: email,
-    otp: otp
+    otp_code: currentOtp
   };
 
-  return emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
-    .then(response => {
-      console.log('OTP sent:', otp);
-      return { ok: true };
-    })
-    .catch(err => {
-      console.error('Failed to send OTP:', err);
-      return { ok: false };
-    });
+  try {
+    const res = await emailjs.send('serivce_j85lbxe', 'template_1jhazk1', templateParams);
+    // res.status === 200 if success
+    return { ok: true };
+  } catch (err) {
+    console.error(err);
+    return { ok: false };
+  }
 }
 
-function verifyOtp(email, code) {
-  const stored = localStorage.getItem('otpCode');
-  return Promise.resolve(code === stored);
+async function verifyOtp(email, code) {
+  // Simply compare the entered code with the current OTP
+  if (code === currentOtp) {
+    // Clear OTP after successful verification
+    currentOtp = null;
+    return true;
+  } else {
+    return false;
+  }
 }
+
 
 // =========================
 // Existing Code
